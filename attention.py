@@ -44,18 +44,19 @@ class SelfAttention(nn.Module):
         values = self.tovalues(x).view(b, t, h, k)
 
         # Fold heads into batch dimensions
-        keys = keys.transpose(1, 2).contiguous().view(b*h, t, k)
-        queries = queries.transpose(1, 2).contiguous().view(b*h, t, k)
-        values = values.transpose(1, 2).contiguous().view(b*h, t, k)
+        keys = keys.transpose(1, 2).contiguous().view(b * h, t, k)
+        queries = queries.transpose(1, 2).contiguous().view(b * h, t, k)
+        values = values.transpose(1, 2).contiguous().view(b * h, t, k)
 
         """
         Scale queries and keys first
         """
-        queries = queries / (k**(1/4))
-        keys = keys / (k**(1/4))
+        queries = queries / (k ** (1 / 4))
+        keys = keys / (k ** (1 / 4))
 
         """
-        Take the query, multiply with transposed key, take the softmax, this gives you a probability distribution over keys
+        Take the query, multiply with transposed key, take the softmax, 
+        this gives you a probability distribution over keys
         multiply with value. This is like an indexing scheme.
         """
 

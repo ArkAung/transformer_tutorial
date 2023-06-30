@@ -24,17 +24,19 @@ def d(tensor=None):
     :return:
     """
     if tensor is None:
-        return 'cuda' if torch.cuda.is_available() else 'cpu'
-    return 'cuda' if tensor.is_cuda else 'cpu'
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    return "cuda" if tensor.is_cuda else "cpu"
+
 
 def here(subpath=None):
     """
     :return: the path in which the package resides (the directory containing the 'former' dir)
     """
     if subpath is None:
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', subpath))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", subpath))
+
 
 def contains_nan(tensor):
     return bool((tensor != tensor).sum() > 0)

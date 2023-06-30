@@ -17,14 +17,15 @@ class TransformerBlock(nn.Module):
         self.ff = nn.Sequential(
             nn.Linear(embed_dim, 2 * embed_dim),
             nn.ReLU(),
-            nn.Linear(2 * embed_dim, embed_dim))
+            nn.Linear(2 * embed_dim, embed_dim),
+        )
 
     def forward(self, x):
         attended = self.attention(x)
         x = self.norm1(attended + x)
 
         feedforward = self.ff(x)
-        return self.norm2(feedforward+x)
+        return self.norm2(feedforward + x)
 
 
 class Transformer(nn.Module):
@@ -38,7 +39,9 @@ class Transformer(nn.Module):
         transformer_blocks = []
 
         for i in range(depth):
-            transformer_blocks.append(TransformerBlock(embed_dim=embed_dim, heads=heads))
+            transformer_blocks.append(
+                TransformerBlock(embed_dim=embed_dim, heads=heads)
+            )
 
         self.tblocks = nn.Sequential(*transformer_blocks)
 
@@ -56,4 +59,3 @@ class Transformer(nn.Module):
 
         x = self.probs(x.mean(dim=1))
         return F.log_softmax(x, dim=1)
-

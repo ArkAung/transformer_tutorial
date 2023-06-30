@@ -1,6 +1,7 @@
 import unittest
 from transformer import Transformer
 
+
 class TestTransformer(unittest.TestCase):
     def setUp(self):
         self.transformer = Transformer(d_model=512, nhead=8, num_encoder_layers=6,
@@ -22,6 +23,7 @@ class TestTransformer(unittest.TestCase):
         output.mean().backward()  # Backward pass
         for name, param in self.transformer.named_parameters():
             self.assertIsNotNone(param.grad, f"Gradient is None for parameter {name}.")
+
 
 if __name__ == '__main__':
     unittest.main()
