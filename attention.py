@@ -1,78 +1,47 @@
 import torch
-from torch import nn
-import torch.nn.functional as F
+import torch.nn as nn
+from torch.nn import functional as F
 
 
-class SelfAttention(nn.Module):
-    def __init__(self, embed_dim: int, heads: int = 8):
-        """
-        Class for Multi-headed Self Attention module.
+class Head(nn.Module):
+    """one head of self-attention"""
 
-        :param embed_dim: Dimension of embedding vector
-        :param heads: Number of attention heads
-        """
+    def __init__(self, head_size, n_embd, block_size, dropout):
         super().__init__()
-        self.k, self.heads = embed_dim, heads
-        """
-        Each head has separate sets of three matrices, query, key and value weight 
-        matrices. But it is more efficient to combine to a single k x (k*heads) matrices
-        """
-        self.tokeys = nn.Linear(embed_dim, embed_dim * heads, bias=False)
-        self.toqueries = nn.Linear(embed_dim, embed_dim * heads, bias=False)
-        self.tovalues = nn.Linear(embed_dim, embed_dim * heads, bias=False)
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
 
-        # Reduce dimension back to k after concatenating outputs from multiple heads
-        self.unifyheads = nn.Linear(heads * embed_dim, embed_dim)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        b, t, k = x.size()
-        h = self.heads
+        B, T, C = x.shape
+        k = self.key(x)  # (B,T,C)
+        q = self.query(x)  # (B,T,C)
+        # compute attention scores ("affinities")
+        wei = q @ k.transpose(-2, -1) * C**-0.5  # (B, T, C) @ (B, C, T) -> (B, T, T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float("-inf"))  # (B, T, T)
+        wei = F.softmax(wei, dim=-1)  # (B, T, T)
+        wei = self.dropout(wei)
+        # perform the weighted aggregation of the values
+        v = self.value(x)  # (B,T,C)
+        out = wei @ v  # (B, T, T) @ (B, T, C) -> (B, T, C)
+        return out
 
-        """
-        Query - embedding vector
-        Key - from memory (think of each key having associated values)
-        Value - from memory
-        """
 
-        """
-        The output of each linear module has size (b, t, h*k).
-        We can reshape this to (b, t, h, k) to give each head its own dimension
-        """
+class MultiHeadAttention(nn.Module):
+    """multiple heads of self-attention in parallel"""
 
-        queries = self.toqueries(x).view(b, t, h, k)
-        keys = self.tokeys(x).view(b, t, h, k)
-        values = self.tovalues(x).view(b, t, h, k)
+    def __init__(self, num_heads, head_size, n_embd, block_size, dropout):
+        super().__init__()
+        self.heads = nn.ModuleList(
+            [Head(head_size, n_embd, block_size, dropout) for _ in range(num_heads)]
+        )
+        self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
 
-        # Fold heads into batch dimensions
-        keys = keys.transpose(1, 2).contiguous().view(b * h, t, k)
-        queries = queries.transpose(1, 2).contiguous().view(b * h, t, k)
-        values = values.transpose(1, 2).contiguous().view(b * h, t, k)
-
-        """
-        Scale queries and keys first
-        """
-        queries = queries / (k ** (1 / 4))
-        keys = keys / (k ** (1 / 4))
-
-        """
-        Take the query, multiply with transposed key, take the softmax, 
-        this gives you a probability distribution over keys
-        multiply with value. This is like an indexing scheme.
-        """
-
-        """
-        dot product between queries and keys give an idea of how similar they are
-        
-        This will be high when the key and the query are very similar
-        """
-        dot = torch.bmm(queries, keys.transpose(1, 2))
-
-        """
-        To get probabilities of keys. The key with the biggest dot product will have the largest value.
-        """
-        dot = F.softmax(dot, dim=2)
-
-        out = torch.bmm(dot, values).view(b, h, t, k)
-
-        out = out.transpose(1, 2).contiguous().view(b, t, h * k)
-        return self.unifyheads(out)
+    def forward(self, x):
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.dropout(self.proj(out))
+        return out

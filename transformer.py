@@ -1,61 +1,37 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from attention import SelfAttention
+
+from attention import MultiHeadAttention
 
 
-class TransformerBlock(nn.Module):
-    def __init__(self, embed_dim, heads):
+class FeedFoward(nn.Module):
+    """a simple linear layer followed by a non-linearity"""
+
+    def __init__(self, n_embd, dropout):
         super().__init__()
-
-        self.attention = SelfAttention(embed_dim=embed_dim, heads=heads)
-
-        self.norm1 = nn.LayerNorm(embed_dim)
-        self.norm2 = nn.LayerNorm(embed_dim)
-
-        # Make hidden layer of the feedforward 2 times as big as the input and output
-        self.ff = nn.Sequential(
-            nn.Linear(embed_dim, 2 * embed_dim),
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
             nn.ReLU(),
-            nn.Linear(2 * embed_dim, embed_dim),
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
         )
 
     def forward(self, x):
-        attended = self.attention(x)
-        x = self.norm1(attended + x)
-
-        feedforward = self.ff(x)
-        return self.norm2(feedforward + x)
+        return self.net(x)
 
 
-class Transformer(nn.Module):
-    def __init__(self, embed_dim, heads, depth, seq_length, num_tokens, num_classes):
+class Block(nn.Module):
+    """Transformer block: communication followed by computation"""
+
+    def __init__(self, n_embd, n_head, block_size, dropout):
+        # n_embd: embedding dimension, n_head: the number of heads we'd like
         super().__init__()
-
-        self.num_tokens = num_tokens
-        self.token_emb = nn.Embedding(num_tokens, embed_dim)
-        self.pos_emb = nn.Embedding(seq_length, embed_dim)
-
-        transformer_blocks = []
-
-        for i in range(depth):
-            transformer_blocks.append(
-                TransformerBlock(embed_dim=embed_dim, heads=heads)
-            )
-
-        self.tblocks = nn.Sequential(*transformer_blocks)
-
-        self.probs = nn.Linear(embed_dim, num_classes)
+        head_size = n_embd // n_head
+        self.sa = MultiHeadAttention(n_head, head_size, n_embd, block_size, dropout)
+        self.ffwd = FeedFoward(n_embd, dropout)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
 
     def forward(self, x):
-        tokens = self.token_emb(x)
-        b, t, k = tokens.size()
-
-        positions = torch.arange(t)
-        positions = self.pos_emb(positions)[None, :, :].expand(b, t, k)
-
-        x = tokens + positions
-        x = self.tblocks(x)
-
-        x = self.probs(x.mean(dim=1))
-        return F.log_softmax(x, dim=1)
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
+        return x
