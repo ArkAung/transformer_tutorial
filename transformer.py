@@ -5,7 +5,6 @@ from attention import MultiHeadAttention
 
 class FeedFoward(nn.Module):
     """a simple linear layer followed by a non-linearity"""
-
     def __init__(self, n_embd, dropout):
         super().__init__()
         self.net = nn.Sequential(
