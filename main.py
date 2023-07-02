@@ -22,10 +22,7 @@ if __name__ == "__main__":
 
     text, vocab_size = get_training_corpus()
     train_data, val_data = train_val_split(text)
-    # here are all the unique characters that occur in this text
-
-    # create a mapping from characters to integers
-
+    
     model = SimpleLanguageModel(
         vocab_size, n_embd, block_size, n_head, n_layer, dropout, device
     )
