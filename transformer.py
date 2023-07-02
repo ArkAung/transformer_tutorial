@@ -4,8 +4,7 @@ from attention import MultiHeadAttention
 
 
 class FeedFoward(nn.Module):
-    """ a simple linear layer followed by a non-linearity """
-
+    """a simple linear layer followed by a non-linearity"""
     def __init__(self, n_embd, dropout):
         super().__init__()
         self.net = nn.Sequential(
@@ -20,7 +19,7 @@ class FeedFoward(nn.Module):
 
 
 class Block(nn.Module):
-    """ Transformer block: communication followed by computation """
+    """Transformer block: communication followed by computation"""
 
     def __init__(self, n_embd, n_head, block_size, dropout):
         # n_embd: embedding dimension, n_head: the number of heads we'd like

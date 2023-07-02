@@ -5,13 +5,19 @@ from transformer import Block
 
 
 class SimpleLanguageModel(nn.Module):
-
-    def __init__(self, vocab_size, n_embd, block_size, n_head, n_layer, dropout, device):
+    def __init__(
+        self, vocab_size, n_embd, block_size, n_head, n_layer, dropout, device
+    ):
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head, block_size=block_size, dropout=dropout) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(
+            *[
+                Block(n_embd, n_head=n_head, block_size=block_size, dropout=dropout)
+                for _ in range(n_layer)
+            ]
+        )
         self.ln_f = nn.LayerNorm(n_embd)  # final layer norm
         self.lm_head = nn.Linear(n_embd, vocab_size)
         self.device = device
@@ -21,7 +27,9 @@ class SimpleLanguageModel(nn.Module):
 
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx)  # (B,T,C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=self.device))  # (T,C)
+        pos_emb = self.position_embedding_table(
+            torch.arange(T, device=self.device)
+        )  # (T,C)
         x = tok_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
         x = self.ln_f(x)  # (B,T,C)

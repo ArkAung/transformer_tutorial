@@ -6,8 +6,12 @@ DEFAULT_FILENAME = "input.txt"
 
 stoi, itos = {}, {}
 
-encode = lambda s: [stoi[c] for c in s]  # encoder: take a string, output a list of integers
-decode = lambda l: ''.join([itos[i] for i in l])  # decoder: take a list of integers, output a string
+encode = lambda s: [
+    stoi[c] for c in s
+]  # encoder: take a string, output a list of integers
+decode = lambda l: "".join(
+    [itos[i] for i in l]
+)  # decoder: take a list of integers, output a string
 
 
 def download_file(url, filename):
@@ -21,7 +25,7 @@ def download_file(url, filename):
 def get_training_corpus(source=DEFAULT_SOURCE, output_filename=DEFAULT_FILENAME):
     global stoi, itos
     download_file(source, output_filename)
-    with open(output_filename, 'r', encoding='utf-8') as f:
+    with open(output_filename, "r", encoding="utf-8") as f:
         text = f.read()
     chars = sorted(list(set(text)))
     vocab_size = len(chars)
@@ -41,22 +45,26 @@ def train_val_split(corpus, split_ratio=0.8):
 
 def get_batch(split, device, train_data, val_data, block_size, batch_size):
     # generate a small batch of data of inputs x and targets y
-    data = train_data if split == 'train' else val_data
+    data = train_data if split == "train" else val_data
     ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([data[i:i + block_size] for i in ix])
-    y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
+    x = torch.stack([data[i : i + block_size] for i in ix])
+    y = torch.stack([data[i + 1 : i + block_size + 1] for i in ix])
     x, y = x.to(device), y.to(device)
     return x, y
 
 
 @torch.no_grad()
-def estimate_loss(model, eval_iters, device, train_data, val_data, block_size, batch_size):
+def estimate_loss(
+    model, eval_iters, device, train_data, val_data, block_size, batch_size
+):
     out = {}
     model.eval()
-    for split in ['train', 'val']:
+    for split in ["train", "val"]:
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
-            X, Y = get_batch(split, device, train_data, val_data, block_size, batch_size)
+            X, Y = get_batch(
+                split, device, train_data, val_data, block_size, batch_size
+            )
             logits, loss = model(X, Y)
             losses[k] = loss.item()
         out[split] = losses.mean()
