@@ -19,7 +19,14 @@ To get started with this tutorial, follow these steps:
 
 1. Clone the repository to your local machine.
 2. Install the necessary Python packages. You can find the required packages in the `requirements.txt` file.
-3. Run the Jupyter notebook `intuition_behind_word_embeddings_with_positional_information.ipynb` to walk through the tutorial.
+3. Run main.py to run the model end to end.
+4. Run the Jupyter notebook `intuition_behind_word_embeddings_with_positional_information.ipynb` to understand the role that positional encoding plays.
+5. Run the Jupyter notebook `learning_process_in_transformers.ipynb` to understand how transformers learn.
+
+## Graph of Transformer for a simple transformer network
+
+With a single head and a single block
+![](/Users/bnb/Workspace/Python/transformer_tutorial/network_graph.png)
 
 ## Contributing
 
