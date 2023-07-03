@@ -7,11 +7,11 @@ if __name__ == "__main__":
     # hyperparameters
     batch_size = 16  # how many independent sequences will we process in parallel?
     block_size = 32  # what is the maximum context length for predictions?
-    max_iters = 200
-    eval_interval = 100
+    max_iters = 100000
+    eval_interval = 500
     learning_rate = 1e-3
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    eval_iters = 200
+    eval_iters = 100
     n_embd = 64
     n_head = 4
     n_layer = 4
@@ -57,6 +57,6 @@ if __name__ == "__main__":
     context = torch.zeros((1, 1), dtype=torch.long, device=device)
     print(
         decode(
-            m.generate(context, max_new_tokens=100, block_size=block_size)[0].tolist()
+            m.generate(context, max_new_tokens=1000, block_size=block_size)[0].tolist()
         )
     )
