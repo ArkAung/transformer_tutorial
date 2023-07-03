@@ -26,7 +26,7 @@ To get started with this tutorial, follow these steps:
 ## Graph of Transformer for a simple transformer network
 
 With a single head and a single block
-![](/Users/bnb/Workspace/Python/transformer_tutorial/network_graph.png)
+![](network_graph.png)
 
 ## Contributing
 
