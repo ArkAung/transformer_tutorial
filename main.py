@@ -7,7 +7,7 @@ if __name__ == "__main__":
     # hyperparameters
     batch_size = 16  # how many independent sequences will we process in parallel?
     block_size = 32  # what is the maximum context length for predictions?
-    max_iters = 100000
+    max_iters = 10000
     eval_interval = 500
     learning_rate = 1e-3
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -17,6 +17,10 @@ if __name__ == "__main__":
     n_layer = 4
     dropout = 0.0
     # ------------
+    # For education purposes
+    disable_kqv_weights = True
+    # This essential removes the learnability of self-attention mechanism
+    # ------------
 
     torch.manual_seed(1337)
 
@@ -24,7 +28,7 @@ if __name__ == "__main__":
     train_data, val_data = train_val_split(text)
     
     model = SimpleLanguageModel(
-        vocab_size, n_embd, block_size, n_head, n_layer, dropout, device
+        vocab_size, n_embd, block_size, n_head, n_layer, dropout, device, disable_kqv_weights
     )
     m = model.to(device)
     # print the number of parameters in the model

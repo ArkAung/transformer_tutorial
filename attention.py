@@ -6,13 +6,17 @@ from torch.nn import functional as F
 class Head(nn.Module):
     """one head of self-attention"""
 
-    def __init__(self, head_size, n_embd, block_size, dropout):
+    def __init__(self, head_size, n_embd, block_size, dropout, disable_kqv_weights=False):
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=False)
         self.query = nn.Linear(n_embd, head_size, bias=False)
         self.value = nn.Linear(n_embd, head_size, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
         self.dropout = nn.Dropout(dropout)
+        if disable_kqv_weights:
+            for layer in [self.key, self.value, self.query]:
+                for param in layer.parameters():
+                    param.requires_grad = False
 
     def forward(self, x):
         B, T, C = x.shape
@@ -32,10 +36,10 @@ class Head(nn.Module):
 class MultiHeadAttention(nn.Module):
     """multiple heads of self-attention in parallel"""
 
-    def __init__(self, num_heads, head_size, n_embd, block_size, dropout):
+    def __init__(self, num_heads, head_size, n_embd, block_size, dropout, disable_kqv_weights):
         super().__init__()
         self.heads = nn.ModuleList(
-            [Head(head_size, n_embd, block_size, dropout) for _ in range(num_heads)]
+            [Head(head_size, n_embd, block_size, dropout, disable_kqv_weights) for _ in range(num_heads)]
         )
         self.proj = nn.Linear(n_embd, n_embd)
         self.dropout = nn.Dropout(dropout)

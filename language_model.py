@@ -6,7 +6,7 @@ from transformer import Block
 
 class SimpleLanguageModel(nn.Module):
     def __init__(
-        self, vocab_size, n_embd, block_size, n_head, n_layer, dropout, device
+        self, vocab_size, n_embd, block_size, n_head, n_layer, dropout, device, disable_kqv_weights
     ):
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
@@ -14,7 +14,8 @@ class SimpleLanguageModel(nn.Module):
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
         self.blocks = nn.Sequential(
             *[
-                Block(n_embd, n_head=n_head, block_size=block_size, dropout=dropout)
+                Block(n_embd, n_head=n_head, block_size=block_size, dropout=dropout,
+                      disable_kqv_weights=disable_kqv_weights)
                 for _ in range(n_layer)
             ]
         )
